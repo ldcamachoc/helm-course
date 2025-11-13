@@ -1,0 +1,17 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:  {{ $fullname := printf "%s-deploy" .Chart.Name | trunc 63 | trimSuffix "-" }}
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-svc
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.containerPorts.http }}
+    protocol: TCP
+  selector:
+    app: {{ .Chart.Name }}-deploy
+    release: {{ .Release.Name }}
+{{ end }}

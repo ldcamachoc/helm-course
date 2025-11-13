@@ -1,0 +1,41 @@
+{{/*- if and .Values.securityContext .Values.securityContext.enabled -}}
+{{- $temp := required "securityContext.runAsUser is required when setting securityContext and enabled is true" .Values.securityContext.runAsUser -}}
+{{- $temp := required "securityContext.fsGroup   is required when setting securityContext and enabled is true" .Values.securityContext.fsGroup -}}
+{{- end - */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: {{ include "templating-deep-dive.fullName" . }}-deploy
+  labels:  {{ include "templating-deep-dive.selectorLabels" .  | nindent 4}}
+spec:
+  selector:
+    matchLabels: {{ include "templating-deep-dive.selectorLabels" .  | nindent 6}}      
+  replicas: {{ if eq .Values.environment "production" -}} 5 {{- else -}} {{ .Values.replicaCount }}{{- end }}
+  template:
+    metadata: 
+      labels: {{ include "templating-deep-dive.selectorLabels" .  | nindent 8}}      
+    spec:
+      containers:
+      - name: {{ .Values.image.name }}
+        image: {{ .Values.image.name}}:{{ .Values.image.tag }}
+        imagePullPolicy: IfNotPresent
+        {{- with .Values.securityContext | default dict }}
+        # Release name: {{ $.Release.Name}}
+        {{- if and (hasKey . "enabled") .enabled }}
+        securityContext:
+          runAsUser: {{ required "securityContext.runAsUser is required when setting securityContext and enabled is true" .runAsUser }}
+          fsGroup: {{ required "securityContext.fsGroup   is required when setting securityContext and enabled is true" .fsGroup }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services | default dict | len }}
+        ports:
+        - containerPort: {{ .Values.containerPorts.http | int }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.containerPorts.http | int }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.containerPorts.http | int }}
+        {{ end }}

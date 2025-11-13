@@ -1,0 +1,23 @@
+{{/* # The value of the .: {{ . }} */}}
+{{/* # The value of the $: {{ $ }} */}}
+
+{{- range $key, $svc := (.Values.services | default dict) }}
+{{ include "templating-deep-dive.validators.service" . }}
+---
+
+{{/* # The value of the .: {{ . }} */}}
+{{/* # The value of the $: {{ $ }} */}}
+
+apiVersion: v1
+kind: Service
+metadata: 
+  name: {{ include "templating-deep-dive.fullName" $ }}-{{ $key}}
+  labels: {{ include "templating-deep-dive.selectorLabels" $  | nindent 4}} 
+spec:
+  type: {{ $svc.type }}
+  ports:
+  - port: {{ $svc.port }}  {{/* include "templating-deep-dive.validators.portRange" $svc.port */}}
+    targetPort: {{ $.Values.containerPorts.http }}
+    protocol: TCP
+  selector: {{ include "templating-deep-dive.selectorLabels" $  | nindent 4}} 
+{{ end }}

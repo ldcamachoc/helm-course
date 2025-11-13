@@ -1,0 +1,17 @@
+# 1. Set our own wordpress username
+# 2. Set our own wordpress password
+# 3. Increase the replica count to 3
+
+wordpressUsername: luis
+#wordpressPassword: ""
+## @param existingSecret Name of existing secret containing WordPress credentials
+## NOTE: Must contain key `wordpress-password`
+## NOTE: When it's set, the `wordpressPassword` parameter is ignored
+##
+existingSecret: custom-wp-credentials # kubectl create secret generic custom-wp-credentials --from-literal=wordpress-password=luispwd
+service:
+  type: NodePort
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
